@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Tycoon: Ultimate</title>
+    <style>
+        /* CSS - Designen på spelet */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --gold: #fbbf24;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .stats h1 { margin: 0; font-size: 1.5rem; color: var(--accent-blue); }
+        
+        .balance-display { text-align: right; }
+        .balance-display div { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; }
+        .balance-display span { font-size: 2rem; font-weight: 800; color: var(--accent-green); }
+
+        .market-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .asset-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid #444;
+            transition: transform 0.2s, border-color 0.3s;
+        }
+
+        .asset-card.up { border-left-color: var(--accent-green); }
+        .asset-card.down { border-left-color: var(--accent-red); }
+        .asset-card.crypto { border-left-color: var(--gold); }
+
+        .info h3 { margin: 0 0 5px 0; font-size: 1.2rem; }
+        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: #334155; color: #cbd5e1; }
+
+        .price-box { text-align: center; min-width: 120px; }
+        .current-price { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; }
+        .owned-count { font-size: 0.9rem; color: #94a3b8; margin-top: 5px; }
+
+        .actions { display: flex; gap: 10px; }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buy-btn { background: var(--accent-green); color: white; }
+        .buy-btn:hover { background: #16a34a; }
+        .sell-btn { background: var(--accent-red); color: white; }
+        .sell-btn:hover { background: #dc2626; }
+        button:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .milestone-msg {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px dashed var(--accent-blue);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <header>
+            <div class="stats">
+                <h1>STOCK TYCOON</h1>
+                <p id="total-networth">Portfölj: 0 kr</p>
+            </div>
+            <div class="balance-display">
+                <div>Tillgängliga pengar</div>
+                <span id="balance">1000</span> <small>kr</small>
+            </div>
+        </header>
+
+        <div id="market-list" class="market-grid">
+            </div>
+
+        <div id="messages">
+            <div class="milestone-msg">Mål: Tjäna 10 000 kr för att låsa upp nya aktier!</div>
+        </div>
+    </div>
+
+    <script>
+        /* JS - Logiken bakom spelet */
+        
+        let balance = 1000;
+        const assets = {
+            "Svenska Äpplen": { price: 150, lastPrice: 150, owned: 0, unlocked: true, type: 'Aktie', vol: 0.02 },
+            "Global Tech": { price: 1200, lastPrice: 1200, owned: 0, unlocked: false, type: 'Aktie', vol: 0.04 },
+            "Fastighets-Magnaten": { price: 5500, lastPrice: 5500, owned: 0, unlocked: false, type: 'Aktie', vol: 0.06 },
+            "BlingCoin (BTC)": { price: 65000, lastPrice: 65000, owned: 0, unlocked: false, type: 'Crypto', vol: 0.15 }
+        };
+
+        function updateUI() {
+            const list = document.getElementById('market-list');
+            const balanceEl = document.getElementById('balance');
+            const netWorthEl = document.getElementById('total-networth');
+            const messageEl = document.getElementById('messages');
+            
+            let totalValue = 0;
+            list.innerHTML = '';
+
+            // Uppdatera saldo
+            balanceEl.innerText = Math.floor(balance).toLocaleString('sv-SE');
+
+            for (let name in assets) {
+                let a = assets[name];
+
+                // Upplåsnings-logik
+                if (balance >= 10000 && name === "Global Tech") a.unlocked = true;
+                if (balance >= 50000 && name === "Fastighets-Magnaten") a.unlocked = true;
+                if (balance >= 1000000 && name === "BlingCoin (BTC)") a.unlocked = true;
+
+                if (a.unlocked) {
+                    totalValue += a.price * a.owned;
+                    
+                    const isUp = a.price >= a.lastPrice;
+                    const card = document.createElement('div');
+                    card.className = `asset-card ${isUp ? 'up' : 'down'} ${a.type === 'Crypto' ? 'crypto' : ''}`;
+                    
+                    card.innerHTML = `
+                        <div class="info">
+                            <span class="tag">${a.type}</span>
+                            <h3>${name}</h3>
+                        </div>
+                        <div class="price-box">
+                            <div class="current-price" style="color: ${isUp ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                                ${a.price.toFixed(2)} kr
+                            </div>
+                            <div class="owned-count">Innehav: ${a.owned} st</div>
+                        </div>
+                        <div class="actions">
+                            <button class="buy-btn" onclick="buy('${name}')">KÖP</button>
+                            <button class="sell-btn" onclick="sell('${name}')" ${a.owned <= 0 ? 'disabled' : ''}>SÄLJ</button>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            }
+
+            netWorthEl.innerText = `Portföljvärde: ${Math.floor(totalValue).toLocaleString('sv-SE')} kr`;
+
+            // Uppdatera meddelanden baserat på framsteg
+            if (balance > 1000000) {
+                messageEl.innerHTML = '<div class="milestone-msg" style="border-color: var(--gold); color: var(--gold)">Mästare! Du har låst upp Kryptomarknaden! 🚀</div>';
+            } else if (balance > 10000) {
+                messageEl.innerHTML = '<div class="milestone-msg">Bra jobbat! Nya aktier tillgängliga. Sikta på 1 miljon!</div>';
+            }
+        }
+
+        function buy(name) {
+            const a = assets[name];
+            if (balance >= a.price) {
+                balance -= a.price;
+                a.owned++;
+                updateUI();
+            }
+        }
+
+        function sell(name) {
+            const a = assets[name];
+            if (a.owned > 0) {
+                balance += a.price;
+                a.owned--;
+                updateUI();
+            }
+        }
+
+        // Marknadssimulering
+        function simulateMarket() {
+            for (let name in assets) {
+                let a = assets[name];
+                a.lastPrice = a.price;
+                
+                // Slumpmässig rörelse
+                let changePercent = 1 + (Math.random() * a.vol * 2 - a.vol);
+                a.price *= changePercent;
+
+                // Prisgolv
+                if (a.price < 10) a.price = 10;
+            }
+            updateUI();
+        }
+
+        // Uppdatera varje sekund
+        setInterval(simulateMarket, 1000);
+        updateUI();
+
+    </script>
+</body>
+</html>
