@@ -3,219 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wall Street Tycoon</title>
+    <title>TradingView Clone - Tycoon Edition</title>
     <style>
         :root {
-            --bg-color: #05070a;
-            --card-bg: #111827;
-            --text-main: #f3f4f6;
-            --accent-green: #10b981;
-            --accent-red: #f43f5e;
-            --accent-blue: #3b82f6;
-            --gold: #fbbf24;
-            --border: #1f2937;
+            --bg-deep: #0a0e17;
+            --bg-panel: #131722;
+            --bg-hover: #1e222d;
+            --text-main: #d1d4dc;
+            --text-bright: #ffffff;
+            --up: #089981;
+            --down: #f23645;
+            --border: #2a2e39;
+            --accent: #2962ff;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-deep);
             color: var(--text-main);
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Trebuchet MS', sans-serif;
             margin: 0;
+            overflow: hidden; /* Gör att det känns som en app */
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        .container {
+        /* --- Header --- */
+        header {
+            height: 50px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .balance-info { display: flex; gap: 30px; font-weight: bold; }
+        .balance-info span { color: var(--up); }
+
+        /* --- Main Layout --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar / Watchlist --- */
+        .sidebar {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-box {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box input {
             width: 100%;
-            max-width: 950px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .watchlist { overflow-y: auto; flex-grow: 1; }
+        .watch-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #1e222d;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            transition: 0.2s;
+        }
+        .watch-item:hover { background: var(--bg-hover); }
+        .watch-item.active { border-left: 3px solid var(--accent); background: var(--bg-hover); }
+        .watch-item .ticker { font-weight: bold; color: var(--text-bright); }
+        .watch-item .price { font-family: monospace; }
+
+        /* --- Chart Area --- */
+        .chart-area {
+            background: var(--bg-deep);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            padding: 15px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+        }
+
+        #main-canvas {
+            flex-grow: 1;
+            cursor: crosshair;
+        }
+
+        /* --- Order Panel --- */
+        .order-panel {
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
             padding: 20px;
         }
 
-        header {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border);
-            position: sticky;
-            top: 15px;
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .logo h1 { margin: 0; font-size: 1.5rem; letter-spacing: -1px; }
-        .logo span { color: var(--accent-blue); }
-
-        .wallet-info { text-align: right; }
-        .wallet-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
-        .balance-val { font-size: 2rem; font-weight: 800; color: var(--accent-green); font-variant-numeric: tabular-nums; }
-
-        .market-grid { display: grid; gap: 12px; }
-
-        .stock-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            display: grid;
-            grid-template-columns: 200px 1fr 140px 160px;
-            align-items: center;
-            padding: 15px 20px;
-            border: 1px solid var(--border);
-            transition: all 0.2s ease;
-        }
-
-        .stock-card:hover { border-color: #374151; transform: scale(1.01); }
-
-        .stock-name h3 { margin: 0; font-size: 1.1rem; }
-        .ticker { font-size: 0.75rem; color: #6b7280; font-weight: bold; }
-
-        .chart-container { height: 60px; margin: 0 15px; }
-        canvas { width: 100%; height: 100%; }
-
-        .price-info { text-align: right; padding-right: 20px; }
-        .price-now { font-family: 'monospace'; font-size: 1.2rem; font-weight: bold; }
-        .owned-tag { font-size: 0.8rem; color: #94a3b8; }
-
-        .btn-group { display: flex; gap: 8px; }
-        button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .buy-btn { background: var(--accent-green); color: #064e3b; }
-        .buy-btn:hover { background: #34d399; }
-        .sell-btn { background: #1f2937; color: white; }
-        .sell-btn:hover { background: var(--accent-red); }
-        button:disabled { opacity: 0.1; cursor: not-allowed; }
-
-        .unlock-banner {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px dashed var(--accent-blue);
-            color: var(--accent-blue);
+        .order-card {
+            background: var(--bg-hover);
             padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 20px;
-            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
+
+        .btn-buy { background: var(--up); width: 100%; color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-sell { background: var(--down); width: 100%; color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.2; }
+
+        .unlock-msg {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-align: center;
+            margin-top: 10px;
+        }
+
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <div class="logo">
-            <h1>WALL ST<span>TYCOON</span></h1>
-            <div id="portfolio-val" style="color: #6b7280; font-size: 0.9rem;">Portfölj: 0 kr</div>
-        </div>
-        <div class="wallet-info">
-            <div class="wallet-label">Tillgängligt Kapital</div>
-            <div id="balance" class="balance-val">10 000</div>
-        </div>
-    </header>
+<header>
+    <div style="font-weight: 900; letter-spacing: 1px;">TRADINGVIEW <span style="color:var(--accent)">PRO</span></div>
+    <div class="balance-info">
+        <div>KAPITAL: <span id="balance">10 000</span> kr</div>
+        <div>PORTFÖLJ: <span id="portfolio" style="color:var(--text-bright)">0</span> kr</div>
+    </div>
+</header>
 
-    <div id="market" class="market-grid">
+<div class="main-container">
+    <div class="sidebar">
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Sök aktie (t.ex. Apple)..." oninput="renderWatchlist()">
         </div>
+        <div class="watchlist" id="watchlist">
+            </div>
+    </div>
 
-    <div id="milestone-container"></div>
+    <div class="chart-area">
+        <div class="chart-header">
+            <h2 id="active-name" style="margin:0; color:white;">Apple Inc.</h2>
+            <span id="active-ticker" class="ticker" style="color:#6b7280">AAPL</span>
+            <span id="active-price" style="font-size: 1.5rem; font-weight: bold; font-family: monospace;">0.00</span>
+        </div>
+        <canvas id="main-canvas"></canvas>
+    </div>
+
+    <div class="order-panel">
+        <h3>Orderpanel</h3>
+        <div class="order-card">
+            <div style="margin-bottom: 10px;">Innehav: <b id="owned-count">0</b> st</div>
+            <button class="btn-buy" onclick="trade('buy')">KÖP (1 st)</button>
+            <button class="btn-sell" id="sell-btn" onclick="trade('sell')">SÄLJ (1 st)</button>
+        </div>
+        <div id="unlock-info" class="unlock-msg">Lås upp Tesla vid 20 000 kr</div>
+    </div>
 </div>
 
 <script>
     let balance = 10000;
+    let selectedTicker = "AAPL";
     
-    // Aktiedata
     const stocks = {
-        "Apple": { ticker: "AAPL", price: 1800, history: [], owned: 0, unlockAt: 0, vol: 0.012, type: "Aktie" },
-        "Microsoft": { ticker: "MSFT", price: 3500, history: [], owned: 0, unlockAt: 0, vol: 0.01, type: "Aktie" },
-        "Tesla": { ticker: "TSLA", price: 2100, history: [], owned: 0, unlockAt: 20000, vol: 0.04, type: "Aktie" },
-        "Nvidia": { ticker: "NVDA", price: 4500, history: [], owned: 0, unlockAt: 20000, vol: 0.05, type: "Aktie" },
-        "Amazon": { ticker: "AMZN", price: 1500, history: [], owned: 0, unlockAt: 50000, vol: 0.02, type: "Aktie" },
-        "Bitcoin": { ticker: "BTC", price: 650000, history: [], owned: 0, unlockAt: 1000000, vol: 0.09, type: "Coin" },
-        "Ethereum": { ticker: "ETH", price: 32000, history: [], owned: 0, unlockAt: 1000000, vol: 0.12, type: "Coin" }
+        "AAPL": { name: "Apple", price: 1850, history: [], owned: 0, unlock: 0, vol: 0.008 },
+        "MSFT": { name: "Microsoft", price: 3400, history: [], owned: 0, unlock: 0, vol: 0.007 },
+        "TSLA": { name: "Tesla", price: 2100, history: [], owned: 0, unlock: 20000, vol: 0.03 },
+        "NVDA": { name: "Nvidia", price: 4200, history: [], owned: 0, unlock: 20000, vol: 0.04 },
+        "AMZN": { name: "Amazon", price: 1600, history: [], owned: 0, unlock: 50000, vol: 0.015 },
+        "BTC": { name: "Bitcoin", price: 680000, history: [], owned: 0, unlock: 1000000, vol: 0.08 },
+        "ETH": { name: "Ethereum", price: 35000, history: [], owned: 0, unlock: 1000000, vol: 0.10 }
     };
 
-    // Initiera historik för grafer
-    for (let s in stocks) {
-        for (let i = 0; i < 40; i++) stocks[s].history.push(stocks[s].price);
+    // Initiera historik
+    for(let s in stocks) {
+        for(let i=0; i<100; i++) stocks[s].history.push(stocks[s].price * (1 + (Math.random()*0.02 - 0.01)));
     }
 
-    function update() {
-        const marketEl = document.getElementById('market');
-        const balanceEl = document.getElementById('balance');
-        const portfolioEl = document.getElementById('portfolio-val');
-        const milestoneEl = document.getElementById('milestone-container');
+    function renderWatchlist() {
+        const list = document.getElementById('watchlist');
+        const query = document.getElementById('search').value.toLowerCase();
+        list.innerHTML = '';
 
-        marketEl.innerHTML = '';
-        balanceEl.innerText = Math.floor(balance).toLocaleString('sv-SE') + " kr";
-        
-        let totalWealth = balance;
-        let portfolioValue = 0;
-
-        for (let name in stocks) {
-            let s = stocks[name];
-            portfolioValue += s.owned * s.price;
-
-            if (balance >= s.unlockAt || s.owned > 0) {
-                const isUp = s.price >= s.history[s.history.length - 2];
-                const card = document.createElement('div');
-                card.className = 'stock-card';
-                card.innerHTML = `
-                    <div class="stock-name">
-                        <span class="ticker">${s.ticker}</span>
-                        <h3>${name}</h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chart-${s.ticker}"></canvas>
-                    </div>
-                    <div class="price-info">
-                        <div class="price-now" style="color: ${isUp ? 'var(--accent-green)' : 'var(--accent-red)'}">
-                            ${s.price.toFixed(2)} kr
-                        </div>
-                        <div class="owned-tag">Du äger: ${s.owned}</div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="buy-btn" onclick="buy('${name}')">KÖP</button>
-                        <button class="sell-btn" onclick="sell('${name}')" ${s.owned <= 0 ? 'disabled' : ''}>SÄLJ</button>
-                    </div>
+        for (let t in stocks) {
+            const s = stocks[t];
+            if (balance < s.unlock && s.owned === 0) continue; // Dold om inte råd/upplåst
+            if (s.name.toLowerCase().includes(query) || t.toLowerCase().includes(query)) {
+                const isUp = s.price >= s.history[s.history.length-2];
+                const div = document.createElement('div');
+                div.className = `watch-item ${selectedTicker === t ? 'active' : ''}`;
+                div.onclick = () => { selectedTicker = t; updateDisplay(); };
+                div.innerHTML = `
+                    <span class="ticker">${t}</span>
+                    <span class="price" style="color:${isUp ? 'var(--up)' : 'var(--down)'}">${s.price.toFixed(2)}</span>
                 `;
-                marketEl.appendChild(card);
-                drawChart(s.ticker, s.history, isUp);
+                list.appendChild(div);
             }
         }
-
-        portfolioEl.innerText = `Portföljvärde: ${Math.floor(portfolioValue).toLocaleString('sv-SE')} kr`;
-
-        // Milestone messages
-        if (balance < 20000) {
-            milestoneEl.innerHTML = `<div class="unlock-banner">Nå 20 000 kr för att låsa upp Tesla & Nvidia 🚀</div>`;
-        } else if (balance < 1000000) {
-            milestoneEl.innerHTML = `<div class="unlock-banner">Nå 1 000 000 kr för att låsa upp Crypto (BTC/ETH) 💎</div>`;
-        } else {
-            milestoneEl.innerHTML = `<div class="unlock-banner" style="color: var(--gold); border-color: var(--gold)">VÄLKOMMEN TILL ELITEN - CRYPTO UPPLÅST! 🚀🌕</div>`;
-        }
     }
 
-    function drawChart(ticker, history, isUp) {
-        const canvas = document.getElementById(`chart-${ticker}`);
-        if (!canvas) return;
+    function updateDisplay() {
+        const s = stocks[selectedTicker];
+        document.getElementById('active-name').innerText = s.name;
+        document.getElementById('active-ticker').innerText = selectedTicker;
+        document.getElementById('active-price').innerText = s.price.toFixed(2) + " kr";
+        document.getElementById('active-price').style.color = s.price >= s.history[s.history.length-2] ? 'var(--up)' : 'var(--down)';
+        document.getElementById('owned-count').innerText = s.owned;
+        document.getElementById('balance').innerText = Math.floor(balance).toLocaleString();
+        
+        let portVal = 0;
+        for(let t in stocks) portVal += stocks[t].owned * stocks[t].price;
+        document.getElementById('portfolio').innerText = Math.floor(portVal).toLocaleString();
+
+        document.getElementById('sell-btn').disabled = s.owned <= 0;
+        
+        // Upplåsningsinfo
+        const next = Object.values(stocks).find(st => st.unlock > balance);
+        document.getElementById('unlock-info').innerText = next ? `Nästa upplåsning: ${next.name} vid ${next.unlock.toLocaleString()} kr` : "Alla tillgångar upplåsta!";
+
+        renderWatchlist();
+        drawMainChart();
+    }
+
+    function drawMainChart() {
+        const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
 
-        const min = Math.min(...history) * 0.98;
-        const max = Math.max(...history) * 1.02;
+        const history = stocks[selectedTicker].history;
+        const min = Math.min(...history) * 0.99;
+        const max = Math.max(...history) * 1.01;
 
+        // Rita rutnät
+        ctx.strokeStyle = '#1e222d';
+        ctx.lineWidth = 1;
+        for(let i=0; i<10; i++) {
+            let y = (canvas.height / 10) * i;
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            let x = (canvas.width / 10) * i;
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+
+        // Rita linje
         ctx.beginPath();
-        ctx.strokeStyle = isUp ? '#10b981' : '#f43f5e';
-        ctx.lineWidth = 3;
-        ctx.lineJoin = 'round';
-
+        ctx.strokeStyle = history[history.length-1] >= history[0] ? varToHex('--up') : varToHex('--down');
+        ctx.lineWidth = 2;
         history.forEach((p, i) => {
             const x = (i / (history.length - 1)) * canvas.width;
             const y = canvas.height - ((p - min) / (max - min)) * canvas.height;
@@ -224,36 +272,35 @@
         ctx.stroke();
     }
 
-    function buy(name) {
-        if (balance >= stocks[name].price) {
-            balance -= stocks[name].price;
-            stocks[name].owned++;
-            update();
-        }
+    function varToHex(varName) {
+        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
     }
 
-    function sell(name) {
-        if (stocks[name].owned > 0) {
-            balance += stocks[name].price;
-            stocks[name].owned--;
-            update();
+    function trade(type) {
+        const s = stocks[selectedTicker];
+        if (type === 'buy' && balance >= s.price) {
+            balance -= s.price;
+            s.owned++;
+        } else if (type === 'sell' && s.owned > 0) {
+            balance += s.price;
+            s.owned--;
         }
+        updateDisplay();
     }
 
     function tick() {
-        for (let name in stocks) {
-            let s = stocks[name];
-            let change = 1 + (Math.random() * s.vol * 2 - s.vol) + 0.001; // Liten trend uppåt
-            s.price *= change;
-            if (s.price < 10) s.price = 10;
+        for (let t in stocks) {
+            let s = stocks[t];
+            s.price *= (1 + (Math.random() * s.vol * 2 - s.vol));
             s.history.push(s.price);
-            if (s.history.length > 40) s.history.shift();
+            if (s.history.length > 100) s.history.shift();
         }
-        update();
+        updateDisplay();
     }
 
     setInterval(tick, 1000);
-    update();
+    window.addEventListener('resize', drawMainChart);
+    updateDisplay();
 </script>
 
 </body>
