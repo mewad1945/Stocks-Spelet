@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Tycoon: Ultimate</title>
+    <title>Trading Tycoon: Med Grafer</title>
     <style>
         /* CSS - Designen på spelet */
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #0b0f19;
+            --card-bg: #161e2e;
             --text-main: #f8fafc;
-            --accent-green: #22c55e;
+            --accent-green: #10b981;
             --accent-red: #ef4444;
             --accent-blue: #3b82f6;
-            --gold: #fbbf24;
+            --gold: #f59e0b;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -28,80 +28,108 @@
 
         .game-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             padding: 20px;
         }
 
         header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            background: rgba(22, 30, 46, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #334155;
+            border: 1px solid #2d3748;
+            backdrop-filter: blur(5px);
+            position: sticky;
+            top: 10px;
+            z-index: 100;
         }
 
-        .stats h1 { margin: 0; font-size: 1.5rem; color: var(--accent-blue); }
+        .stats h1 { margin: 0; font-size: 1.6rem; color: var(--text-main); font-weight: 800; }
+        .logo-sub { color: var(--accent-blue); font-size: 0.9rem; margin-top: -5px; display: block; }
         
         .balance-display { text-align: right; }
-        .balance-display div { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; }
-        .balance-display span { font-size: 2rem; font-weight: 800; color: var(--accent-green); }
+        .balance-display div { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-display span { font-size: 2.2rem; font-weight: 900; color: var(--accent-green); }
 
         .market-grid {
             display: grid;
-            gap: 15px;
+            gap: 20px;
         }
 
         .asset-card {
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: space-between;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 180px 1fr 120px 160px; /* Layout: Info, Graf, Pris, Knappar */
             align-items: center;
-            border-left: 6px solid #444;
-            transition: transform 0.2s, border-color 0.3s;
+            border: 1px solid #2d3748;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .asset-card.up { border-left-color: var(--accent-green); }
-        .asset-card.down { border-left-color: var(--accent-red); }
-        .asset-card.crypto { border-left-color: var(--gold); }
+        .asset-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
 
-        .info h3 { margin: 0 0 5px 0; font-size: 1.2rem; }
-        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: #334155; color: #cbd5e1; }
+        .asset-card.crypto { border-color: rgba(245, 158, 11, 0.3); }
 
-        .price-box { text-align: center; min-width: 120px; }
-        .current-price { font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: bold; }
-        .owned-count { font-size: 0.9rem; color: #94a3b8; margin-top: 5px; }
+        /* Vänster sida - Namn */
+        .info-section { padding: 20px; }
+        .info-section h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .tag { font-size: 0.7rem; padding: 3px 8px; border-radius: 6px; background: #2d3748; color: #cbd5e1; font-weight: bold; }
+        .crypto-tag { background: rgba(245, 158, 11, 0.2); color: var(--gold); }
 
-        .actions { display: flex; gap: 10px; }
+        /* Mitten - Grafen */
+        .graph-section {
+            height: 80px;
+            padding: 10px 0;
+            position: relative;
+        }
+        .stock-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Höger - Pris och Innehav */
+        .price-section { text-align: center; padding: 20px; }
+        .current-price { font-family: 'Consolas', monospace; font-size: 1.3rem; font-weight: bold; transition: color 0.2s; }
+        .owned-count { font-size: 0.85rem; color: #94a3b8; margin-top: 5px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
+
+        /* Längst till höger - Knappar */
+        .action-section { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
         
         button {
-            padding: 10px 20px;
+            width: 100%;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.9rem;
         }
 
         .buy-btn { background: var(--accent-green); color: white; }
-        .buy-btn:hover { background: #16a34a; }
-        .sell-btn { background: var(--accent-red); color: white; }
-        .sell-btn:hover { background: #dc2626; }
-        button:disabled { opacity: 0.2; cursor: not-allowed; }
+        .buy-btn:hover { background: #059669; }
+        .sell-btn { background: #374151; color: #f1f5f9; }
+        .sell-btn:hover { background: #ef4444; color: white; }
+        
+        button:disabled { opacity: 0.15; cursor: not-allowed; }
 
         .milestone-msg {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.05);
             border: 1px dashed var(--accent-blue);
             padding: 15px;
             border-radius: 10px;
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
             color: var(--accent-blue);
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -110,12 +138,12 @@
     <div class="game-container">
         <header>
             <div class="stats">
-                <h1>STOCK TYCOON</h1>
-                <p id="total-networth">Portfölj: 0 kr</p>
+                <h1>TRADING <span style="color:var(--gold)">TYCOON</span></h1>
+                <span class="logo-sub">Simulering 1.0</span>
             </div>
             <div class="balance-display">
-                <div>Tillgängliga pengar</div>
-                <span id="balance">1000</span> <small>kr</small>
+                <div>Tillgängligt kapital</div>
+                <span id="balance">1 000</span> <small style="color:#94a3b8">kr</small>
             </div>
         </header>
 
@@ -123,76 +151,156 @@
             </div>
 
         <div id="messages">
-            <div class="milestone-msg">Mål: Tjäna 10 000 kr för att låsa upp nya aktier!</div>
+            <div class="milestone-msg">Nå 10 000 kr för att låsa upp fler aktier!</div>
         </div>
     </div>
 
     <script>
-        /* JS - Logiken bakom spelet */
+        /* JS - Logiken och Graf-ritandet */
         
         let balance = 1000;
+        
+        // Databas över tillgångar med prishistorik för grafen
         const assets = {
-            "Svenska Äpplen": { price: 150, lastPrice: 150, owned: 0, unlocked: true, type: 'Aktie', vol: 0.02 },
-            "Global Tech": { price: 1200, lastPrice: 1200, owned: 0, unlocked: false, type: 'Aktie', vol: 0.04 },
-            "Fastighets-Magnaten": { price: 5500, lastPrice: 5500, owned: 0, unlocked: false, type: 'Aktie', vol: 0.06 },
-            "BlingCoin (BTC)": { price: 65000, lastPrice: 65000, owned: 0, unlocked: false, type: 'Crypto', vol: 0.15 }
+            "Svenska Äpplen": { price: 150, history: [], owned: 0, unlocked: true, type: 'Aktie', vol: 0.015 },
+            "Global Tech": { price: 850, history: [], owned: 0, unlocked: false, type: 'Aktie', vol: 0.035 },
+            "GruvBolaget": { price: 2200, history: [], owned: 0, unlocked: false, type: 'Aktie', vol: 0.055 },
+            "BlingCoin (BTC)": { price: 45000, history: [], owned: 0, unlocked: false, type: 'Crypto', vol: 0.12 }
         };
+
+        // Initiera historik
+        for(let key in assets) {
+            for(let i=0; i<30; i++) { assets[key].history.push(assets[key].price); }
+        }
 
         function updateUI() {
             const list = document.getElementById('market-list');
             const balanceEl = document.getElementById('balance');
-            const netWorthEl = document.getElementById('total-networth');
             const messageEl = document.getElementById('messages');
             
-            let totalValue = 0;
+            // Spara scroll-position så det inte hoppar
+            const scrollPos = window.scrollY;
             list.innerHTML = '';
 
-            // Uppdatera saldo
             balanceEl.innerText = Math.floor(balance).toLocaleString('sv-SE');
 
             for (let name in assets) {
                 let a = assets[name];
 
-                // Upplåsnings-logik
+                // Upplåsnings-logik baserat på SALDO
                 if (balance >= 10000 && name === "Global Tech") a.unlocked = true;
-                if (balance >= 50000 && name === "Fastighets-Magnaten") a.unlocked = true;
+                if (balance >= 50000 && name === "GruvBolaget") a.unlocked = true;
                 if (balance >= 1000000 && name === "BlingCoin (BTC)") a.unlocked = true;
 
                 if (a.unlocked) {
-                    totalValue += a.price * a.owned;
+                    const currentPrice = a.price;
+                    const oldPrice = a.history[a.history.length - 2];
+                    const isUp = currentPrice >= oldPrice;
+                    const priceColor = isUp ? 'var(--accent-green)' : 'var(--accent-red)';
                     
-                    const isUp = a.price >= a.lastPrice;
+                    const isCrypto = a.type === 'Crypto';
+
                     const card = document.createElement('div');
-                    card.className = `asset-card ${isUp ? 'up' : 'down'} ${a.type === 'Crypto' ? 'crypto' : ''}`;
+                    card.className = `asset-card ${isCrypto ? 'crypto' : ''}`;
                     
                     card.innerHTML = `
-                        <div class="info">
-                            <span class="tag">${a.type}</span>
+                        <div class="info-section">
+                            <span class="tag ${isCrypto ? 'crypto-tag' : ''}">${a.type}</span>
                             <h3>${name}</h3>
                         </div>
-                        <div class="price-box">
-                            <div class="current-price" style="color: ${isUp ? 'var(--accent-green)' : 'var(--accent-red)'}">
-                                ${a.price.toFixed(2)} kr
-                            </div>
-                            <div class="owned-count">Innehav: ${a.owned} st</div>
+                        
+                        <div class="graph-section">
+                            <canvas id="chart-${name.replace(/\s/g, '')}" class="stock-chart"></canvas>
                         </div>
-                        <div class="actions">
-                            <button class="buy-btn" onclick="buy('${name}')">KÖP</button>
-                            <button class="sell-btn" onclick="sell('${name}')" ${a.owned <= 0 ? 'disabled' : ''}>SÄLJ</button>
+
+                        <div class="price-section">
+                            <div class="current-price" style="color: ${priceColor}">
+                                ${currentPrice.toFixed(2)} kr
+                            </div>
+                            <div class="owned-count">Äger: ${a.owned}</div>
+                        </div>
+
+                        <div class="action-section">
+                            <button class="buy-btn" onclick="buy('${name}')">KÖP 1x</button>
+                            <button class="sell-btn" onclick="sell('${name}')" ${a.owned <= 0 ? 'disabled' : ''}>SÄLJ 1x</button>
                         </div>
                     `;
                     list.appendChild(card);
+                    
+                    // Rita grafen för denna tillgång
+                    drawGraph(`chart-${name.replace(/\s/g, '')}`, a.history, isUp);
                 }
             }
 
-            netWorthEl.innerText = `Portföljvärde: ${Math.floor(totalValue).toLocaleString('sv-SE')} kr`;
-
-            // Uppdatera meddelanden baserat på framsteg
-            if (balance > 1000000) {
-                messageEl.innerHTML = '<div class="milestone-msg" style="border-color: var(--gold); color: var(--gold)">Mästare! Du har låst upp Kryptomarknaden! 🚀</div>';
-            } else if (balance > 10000) {
-                messageEl.innerHTML = '<div class="milestone-msg">Bra jobbat! Nya aktier tillgängliga. Sikta på 1 miljon!</div>';
+            // Uppdatera meddelanden
+            if (balance >= 1000000) {
+                messageEl.innerHTML = '<div class="milestone-msg" style="border-color: var(--gold); color: var(--gold)">MÄSTARE! Du har låst upp Kryptomarknaden! 🚀</div>';
+            } else if (balance >= 10000) {
+                messageEl.innerHTML = '<div class="milestone-msg">Snyggt! Fler aktier öppna. Sikta på 1 000 000 kr för Crypto!</div>';
             }
+        }
+
+        // Funktion för att rita linjegrafen på en Canvas
+        function drawGraph(canvasId, history, isUp) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Sätt intern upplösning (DPI fix)
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 5;
+
+            // Hitta min/max pris i historiken för att skala grafen
+            let min = Math.min(...history);
+            let max = Math.max(...history);
+            
+            // Lägg till lite marginal i toppen och botten
+            if (max === min) { max += 10; min -= 10; }
+            const range = (max - min) * 1.2;
+            const midpoint = (max + min) / 2;
+            const scaleMin = midpoint - range/2;
+            const scaleMax = midpoint + range/2;
+
+            ctx.clearRect(0, 0, width, height);
+            
+            // Rita linjen
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isUp ? '#10b981' : '#ef4444'; // Grön eller Röd
+            ctx.lineJoin = 'round';
+
+            for (let i = 0; i < history.length; i++) {
+                // Skala X (tid)
+                const x = (i / (history.length - 1)) * width;
+                // Skala Y (pris) - Inverterad eftersom 0 är högst upp i Canvas
+                const y = padding + (1 - (history[i] - scaleMin) / (scaleMax - scaleMin)) * (height - padding*2);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            // Skapa toning under linjen
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            if(isUp) {
+                gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+                gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
+                gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+            }
+            ctx.fillStyle = gradient;
+            ctx.fill();
         }
 
         function buy(name) {
@@ -213,24 +321,34 @@
             }
         }
 
-        // Marknadssimulering
+        // Marknadssimulering - körs varje sekund
         function simulateMarket() {
             for (let name in assets) {
                 let a = assets[name];
-                a.lastPrice = a.price;
                 
-                // Slumpmässig rörelse
-                let changePercent = 1 + (Math.random() * a.vol * 2 - a.vol);
+                // Matematik för prisrörelse (Brownsk rörelse)
+                let drift = 0.002; // Liten inbyggd trend uppåt
+                let shock = (Math.random() * a.vol * 2 - a.vol);
+                let changePercent = 1 + drift + shock;
+                
                 a.price *= changePercent;
 
                 // Prisgolv
-                if (a.price < 10) a.price = 10;
+                if (a.price < 5) a.price = 5;
+
+                // Spara i historiken
+                a.history.push(a.price);
+                if (a.history.length > 30) {
+                    a.history.shift(); // Ta bort äldsta värdet
+                }
             }
             updateUI();
         }
 
-        // Uppdatera varje sekund
+        // Uppdatera marknaden varje sekund
         setInterval(simulateMarket, 1000);
+        
+        // Första renderingen
         updateUI();
 
     </script>
